@@ -1,0 +1,21 @@
+def id : (A : Type) -> A -> A := \A x => x
+
+def funext :
+    (A : Type) -> (B : A -> Type) -> (f g : (x : A) -> B x) ->
+    ((x : A) -> Eq (B x) (f x) (g x)) -> Eq ((x : A) -> B x) f g
+  := \A B f g h => h
+
+def funext-inv :
+    (A : Type) -> (B : A -> Type) -> (f g : (x : A) -> B x) ->
+    Eq ((x : A) -> B x) f g -> (x : A) -> Eq (B x) (f x) (g x)
+  := \A B f g p => p
+
+def refl-nat : Eq Nat 2 2 := refl
+
+def zero-neq-one : Eq Nat zero (suc zero) -> Empty := \p => p
+
+def bool-eq-true : Eq Bool true true := refl
+def bool-neq : Eq Bool true false -> Empty := \p => p
+
+eval id Nat (suc zero)
+eval refl-nat

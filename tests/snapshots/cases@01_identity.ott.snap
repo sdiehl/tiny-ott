@@ -1,0 +1,14 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/01_identity.ott
+---
+def id
+  : (A : Type) -> A -> A
+  := \A => \x => x
+eval
+  = suc (suc zero)
+  : Nat
+eval
+  = true
+  : Bool

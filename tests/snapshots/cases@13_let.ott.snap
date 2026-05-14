@@ -1,0 +1,14 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/13_let.ott
+---
+def succ-twice
+  : Nat -> Nat
+  := \n => let m : Nat := suc n in let k : Nat := suc m in k
+eval
+  = suc (suc zero)
+  : Nat
+eval
+  = suc (suc (suc (suc (suc zero))))
+  : Nat

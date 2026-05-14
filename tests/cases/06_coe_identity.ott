@@ -1,0 +1,8 @@
+-- coe : Eq Type A B -> A -> B is a primitive in OTT.
+-- When A and B are convertible, coe reduces to the identity function:
+-- coe A A p x ~> x for any proof p.
+
+def coe-id : (A : Type) -> A -> A := \A x => coe A A tt x
+
+eval coe-id Nat (suc zero)
+eval coe-id Bool true

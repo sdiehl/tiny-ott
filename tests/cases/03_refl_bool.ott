@@ -1,0 +1,10 @@
+-- Eq at Bool is decidable. For equal canonical booleans it reduces to Unit,
+-- for distinct ones it reduces to Empty. So decidability is definitional.
+
+def t-eq-t : Eq Bool true true := refl
+def f-eq-f : Eq Bool false false := refl
+
+def t-neq-f : Eq Bool true false -> Empty := \p => p
+def f-neq-t : Eq Bool false true -> Empty := \p => p
+
+eval t-eq-t

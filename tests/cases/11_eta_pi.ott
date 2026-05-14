@@ -1,0 +1,8 @@
+-- Eta for functions: (\x => f x) is convertible with f.
+-- We can swap a function with its eta-expansion definitionally.
+
+def id-eta : (A : Type) -> (f : A -> A) -> Eq (A -> A) f (\x => f x)
+  := \A f => refl
+
+def id-eta2 : (A : Type) -> (f : A -> A) -> Eq (A -> A) (\x => f x) f
+  := \A f => refl

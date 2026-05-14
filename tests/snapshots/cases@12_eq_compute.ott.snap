@@ -1,0 +1,14 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/12_eq_compute.ott
+---
+def eq-pi
+  : (A : Type) -> (f : A -> Nat) -> Eq (A -> Nat) f f
+  := \A => \f => \_ => refl
+def eq-sig
+  : (A : Type) -> (p : A * Nat) -> Eq (A * Nat) p p
+  := \A => \p => (refl, refl)
+def eq-nested
+  : (A : Type) -> (f : A -> A * Nat) -> Eq (A -> A * Nat) f f
+  := \A => \f => \_ => (refl, refl)

@@ -1,0 +1,10 @@
+-- Eq at Nat reduces to a structural Peano equality.
+-- For equal canonical numerals this collapses to Unit,
+-- so `refl` typechecks via the OTT reduction Eq Nat n n ~> Unit.
+
+def refl-zero : Eq Nat zero zero := refl
+def refl-one  : Eq Nat (suc zero) (suc zero) := refl
+def refl-two  : Eq Nat 2 2 := refl
+def refl-ten  : Eq Nat 10 10 := refl
+
+eval refl-two

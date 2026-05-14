@@ -1,0 +1,14 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/06_coe_identity.ott
+---
+def coe-id
+  : (A : Type) -> A -> A
+  := \A => \x => coe A A tt x
+eval
+  = suc zero
+  : Nat
+eval
+  = true
+  : Bool

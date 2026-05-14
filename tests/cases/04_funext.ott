@@ -1,0 +1,14 @@
+-- Function extensionality is definitional in OTT.
+-- Eq at (x : A) -> B x reduces to the pointwise statement
+--   (x : A) -> Eq (B x) (f x) (g x)
+-- so funext becomes a definitional identity.
+
+def funext :
+    (A : Type) -> (B : A -> Type) -> (f g : (x : A) -> B x) ->
+    ((x : A) -> Eq (B x) (f x) (g x)) -> Eq ((x : A) -> B x) f g
+  := \A B f g h => h
+
+def funext-inv :
+    (A : Type) -> (B : A -> Type) -> (f g : (x : A) -> B x) ->
+    Eq ((x : A) -> B x) f g -> (x : A) -> Eq (B x) (f x) (g x)
+  := \A B f g p => p

@@ -1,0 +1,20 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/03_refl_bool.ott
+---
+def t-eq-t
+  : Eq Bool true true
+  := tt
+def f-eq-f
+  : Eq Bool false false
+  := tt
+def t-neq-f
+  : Eq Bool true false -> Empty
+  := \p => p
+def f-neq-t
+  : Eq Bool false true -> Empty
+  := \p => p
+eval
+  = tt
+  : Unit

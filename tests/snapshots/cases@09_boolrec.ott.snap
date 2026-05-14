@@ -1,0 +1,26 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/09_boolrec.ott
+---
+def not
+  : Bool -> Bool
+  := \b => boolrec (\_ => Bool) false true b
+def and
+  : Bool -> Bool -> Bool
+  := \a => \b => boolrec (\_ => Bool) b false a
+eval
+  = false
+  : Bool
+eval
+  = true
+  : Bool
+eval
+  = true
+  : Bool
+eval
+  = false
+  : Bool
+eval
+  = false
+  : Bool

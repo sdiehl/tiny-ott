@@ -1,0 +1,8 @@
+def not : Bool -> Bool := \b => boolrec (\_ => Bool) false true b
+def and : Bool -> Bool -> Bool := \a b => boolrec (\_ => Bool) b false a
+
+eval not true
+eval not false
+eval and true true
+eval and true false
+eval and false true

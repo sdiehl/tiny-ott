@@ -1,0 +1,14 @@
+-- Recursors compute on closed canonical inputs.
+
+def double : Nat -> Nat
+  := \n => natrec (\_ => Nat) zero (\_ r => suc (suc r)) n
+
+eval double zero
+eval double (suc zero)
+eval double 2
+eval double 5
+
+def add : Nat -> Nat -> Nat
+  := \m n => natrec (\_ => Nat) n (\_ r => suc r) m
+
+eval add 2 3

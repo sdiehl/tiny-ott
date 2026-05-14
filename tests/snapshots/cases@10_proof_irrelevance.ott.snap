@@ -1,0 +1,11 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/10_proof_irrelevance.ott
+---
+def eq-irrelevance
+  : (A : Type) -> (x : A) -> (y : A) -> (p : Eq A x y) -> (q : Eq A x y) -> Eq (Eq A x y) p q
+  := \A => \x => \y => \p => \q => tt
+def eq-irrelevance-nat
+  : (x : Nat) -> (y : Nat) -> (p : Eq Nat x y) -> (q : Eq Nat x y) -> Eq (Eq Nat x y) p q
+  := \x => \y => \p => \q => tt

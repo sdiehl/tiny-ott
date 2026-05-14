@@ -1,0 +1,8 @@
+def succ-twice : Nat -> Nat
+  := \n =>
+       let m : Nat := suc n in
+       let k : Nat := suc m in
+       k
+
+eval succ-twice zero
+eval succ-twice 3

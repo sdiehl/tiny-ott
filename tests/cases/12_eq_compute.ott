@@ -1,0 +1,13 @@
+-- The Eq type computes on canonical inputs. Here a few demonstrations
+-- that exercise the reduction rules at compound types.
+
+-- Pi -> reduces pointwise:
+def eq-pi : (A : Type) -> (f : A -> Nat) -> Eq (A -> Nat) f f := \A f => refl
+
+-- Sigma -> reduces componentwise:
+def eq-sig : (A : Type) -> (p : A * Nat) -> Eq (A * Nat) p p := \A p => refl
+
+-- Nested:
+def eq-nested :
+    (A : Type) -> (f : A -> A * Nat) -> Eq (A -> A * Nat) f f
+  := \A f => refl

@@ -1,0 +1,17 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/07_disequal_nat.ott
+---
+def zero-neq-one
+  : Eq Nat zero (suc zero) -> Empty
+  := \p => p
+def zero-neq-two
+  : Eq Nat zero (suc (suc zero)) -> Empty
+  := \p => p
+def one-neq-two
+  : Eq Nat (suc zero) (suc (suc zero)) -> Empty
+  := \p => p
+def two-neq-five
+  : Eq Nat (suc (suc zero)) (suc (suc (suc (suc (suc zero))))) -> Empty
+  := \p => p

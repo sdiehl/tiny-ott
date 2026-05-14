@@ -1,0 +1,11 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/11_eta_pi.ott
+---
+def id-eta
+  : (A : Type) -> (f : A -> A) -> Eq (A -> A) f (\x => f x)
+  := \A => \f => \_ => refl
+def id-eta2
+  : (A : Type) -> (f : A -> A) -> Eq (A -> A) (\x => f x) f
+  := \A => \f => \_ => refl

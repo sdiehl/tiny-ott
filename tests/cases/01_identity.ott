@@ -1,0 +1,4 @@
+def id : (A : Type) -> A -> A := \A x => x
+
+eval id Nat (suc (suc zero))
+eval id Bool true

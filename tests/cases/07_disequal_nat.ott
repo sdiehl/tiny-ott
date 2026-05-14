@@ -1,0 +1,7 @@
+-- Disequal naturals: Eq Nat zero (suc zero) reduces to Empty,
+-- so we can build the absurdity function definitionally.
+
+def zero-neq-one : Eq Nat zero (suc zero) -> Empty := \p => p
+def zero-neq-two : Eq Nat zero 2 -> Empty := \p => p
+def one-neq-two  : Eq Nat (suc zero) 2 -> Empty := \p => p
+def two-neq-five : Eq Nat 2 5 -> Empty := \p => p

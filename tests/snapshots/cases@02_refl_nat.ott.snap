@@ -1,0 +1,20 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/02_refl_nat.ott
+---
+def refl-zero
+  : Eq Nat zero zero
+  := tt
+def refl-one
+  : Eq Nat (suc zero) (suc zero)
+  := tt
+def refl-two
+  : Eq Nat (suc (suc zero)) (suc (suc zero))
+  := tt
+def refl-ten
+  : Eq Nat (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc zero)))))))))) (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc zero))))))))))
+  := tt
+eval
+  = tt
+  : Unit
