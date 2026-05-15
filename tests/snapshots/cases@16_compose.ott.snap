@@ -1,0 +1,17 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/16_compose.ott
+---
+def compose
+  : (A : Type) -> (B : Type) -> (C : Type) -> (B -> C) -> (A -> B) -> A -> C
+  := \A => \B => \C => \f => \g => \x => f (g x)
+def succ
+  : Nat -> Nat
+  := \n => suc n
+eval
+  = suc (suc (suc (suc (suc zero))))
+  : Nat
+eval
+  = false
+  : Bool

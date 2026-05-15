@@ -1,0 +1,10 @@
+-- The `check` decl form checks a term against a type without binding
+-- a name. Useful for one-off assertions in a test file.
+
+check refl : Eq Nat 2 2
+check refl : Eq Bool true true
+check refl : Eq (Nat * Bool) (3, true) (3, true)
+check tt : Unit
+check zero : Nat
+check (zero, true) : Nat * Bool
+check refl : Eq Nat (suc (suc zero)) 2

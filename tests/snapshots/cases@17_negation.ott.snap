@@ -1,0 +1,20 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/17_negation.ott
+---
+def Not
+  : Type -> Type
+  := \A => A -> Empty
+def not-zero-eq-one
+  : Not (Eq Nat zero (suc zero))
+  := \p => p
+def not-true-eq-false
+  : Not (Eq Bool true false)
+  := \p => p
+def ex-falso
+  : (A : Type) -> Empty -> A
+  := \A => \e => empty-rec A e
+def from-disequal
+  : (A : Type) -> Eq Nat zero (suc zero) -> A
+  := \A => \p => empty-rec A p

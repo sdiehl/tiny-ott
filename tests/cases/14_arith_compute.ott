@@ -1,0 +1,13 @@
+-- Eq Nat (add m n) k reduces when the args are closed:
+-- the elaborator normalizes both sides and then takes the OTT
+-- structural reduction down to Unit.
+
+def add : Nat -> Nat -> Nat
+  := \m n => natrec (\_ => Nat) n (\_ r => suc r) m
+
+def add-2-3-eq-5 : Eq Nat (add 2 3) 5 := refl
+def add-0-7-eq-7 : Eq Nat (add zero 7) 7 := refl
+def add-4-0-eq-4 : Eq Nat (add 4 zero) 4 := refl
+
+eval add 2 3
+eval add 10 zero

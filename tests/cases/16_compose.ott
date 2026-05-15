@@ -1,0 +1,7 @@
+def compose : (A B C : Type) -> (B -> C) -> (A -> B) -> A -> C
+  := \A B C f g x => f (g x)
+
+def succ : Nat -> Nat := \n => suc n
+
+eval compose Nat Nat Nat succ succ 3
+eval compose Bool Bool Bool (\b => boolrec (\_ => Bool) false true b) (\b => b) true

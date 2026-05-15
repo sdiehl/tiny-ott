@@ -1,0 +1,26 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/22_check_decl.ott
+---
+check ok
+  : Eq Nat (suc (suc zero)) (suc (suc zero))
+  ~ tt
+check ok
+  : Eq Bool true true
+  ~ tt
+check ok
+  : Eq (Nat * Bool) (suc (suc (suc zero)), true) (suc (suc (suc zero)), true)
+  ~ (tt, tt)
+check ok
+  : Unit
+  ~ tt
+check ok
+  : Nat
+  ~ zero
+check ok
+  : Nat * Bool
+  ~ (zero, true)
+check ok
+  : Eq Nat (suc (suc zero)) (suc (suc zero))
+  ~ tt

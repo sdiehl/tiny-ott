@@ -1,9 +1,11 @@
 use tiny_ott::check_str;
 
-const SRC: &str = include_str!("demo.ott");
+const PRELUDE: &str = include_str!("prelude.ott");
+const DEMO: &str = include_str!("demo.ott");
 
 fn main() {
-    match check_str(SRC) {
+    let src = format!("{PRELUDE}\n{DEMO}");
+    match check_str(&src) {
         Ok(out) => print!("{out}"),
         Err(e) => {
             eprintln!("error: {e}");

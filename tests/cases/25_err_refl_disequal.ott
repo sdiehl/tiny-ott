@@ -1,0 +1,3 @@
+-- Closed disequal naturals: Eq Nat 2 3 reduces to Empty,
+-- so refl is rejected because Empty has no inhabitant.
+def bogus : Eq Nat 2 3 := refl

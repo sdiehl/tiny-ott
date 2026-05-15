@@ -1,0 +1,16 @@
+def add : Nat -> Nat -> Nat
+  := \m n => natrec (\_ => Nat) n (\_ r => suc r) m
+
+def mul : Nat -> Nat -> Nat
+  := \m n => natrec (\_ => Nat) zero (\_ r => add n r) m
+
+def fact : Nat -> Nat
+  := \n => natrec (\_ => Nat) (suc zero) (\k r => mul (suc k) r) n
+
+eval fact zero
+eval fact 1
+eval fact 3
+eval fact 4
+
+def mul-2-3-eq-6 : Eq Nat (mul 2 3) 6 := refl
+def fact-3-eq-6  : Eq Nat (fact 3) 6 := refl

@@ -1,0 +1,6 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/25_err_refl_disequal.ott
+---
+ERROR: refl: Empty is not inhabited (at depth 0)

@@ -1,0 +1,2 @@
+-- Captures the error message emitted when a term has the wrong type.
+def oops : Nat := true

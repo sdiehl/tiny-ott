@@ -1,0 +1,13 @@
+-- A first component drawn from Type and a second component drawn from
+-- the first. The signature `(A : Type) * A` is the type of "some type
+-- together with an element of it".
+
+def Sig : Type := (A : Type) * A
+
+def nat-witness : Sig := (Nat, suc (suc zero))
+def bool-witness : Sig := (Bool, true)
+
+eval fst nat-witness
+eval snd nat-witness
+eval fst bool-witness
+eval snd bool-witness

@@ -1,0 +1,20 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/20_sigma_projections.ott
+---
+def Pair
+  : Type -> Type -> Type
+  := \A => \B => A * B
+def swap
+  : (A : Type) -> (B : Type) -> (A * B) -> B * A
+  := \A => \B => \p => (snd p, fst p)
+def swap-eq
+  : (A : Type) -> (B : Type) -> (a : A) -> (b : B) -> Eq (B * A) (swap A B (a, b)) (b, a)
+  := \A => \B => \a => \b => (refl, refl)
+eval
+  = (true, suc (suc (suc zero)))
+  : Bool * Nat
+eval
+  = true
+  : Bool

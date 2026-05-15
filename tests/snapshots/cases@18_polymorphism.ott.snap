@@ -1,0 +1,20 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/18_polymorphism.ott
+---
+def Endo
+  : Type -> Type
+  := \A => A -> A
+def apply-endo
+  : (A : Type) -> Endo A -> A -> A
+  := \A => \f => \x => f x
+def twice
+  : (A : Type) -> Endo A -> Endo A
+  := \A => \f => \x => f (f x)
+eval
+  = suc (suc (suc (suc (suc zero))))
+  : Nat
+eval
+  = true
+  : Bool

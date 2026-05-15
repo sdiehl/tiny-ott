@@ -1,0 +1,17 @@
+def id : (A : Type) -> A -> A := \A x => x
+
+def compose : (A B C : Type) -> (B -> C) -> (A -> B) -> A -> C
+  := \A B C f g x => f (g x)
+
+def Not : Type -> Type := \A => A -> Empty
+def Endo : Type -> Type := \A => A -> A
+
+def not : Bool -> Bool := \b => boolrec (\_ => Bool) false true b
+def and : Bool -> Bool -> Bool := \a b => boolrec (\_ => Bool) b false a
+def or  : Bool -> Bool -> Bool := \a b => boolrec (\_ => Bool) true b a
+
+def add : Nat -> Nat -> Nat
+  := \m n => natrec (\_ => Nat) n (\_ r => suc r) m
+
+def mul : Nat -> Nat -> Nat
+  := \m n => natrec (\_ => Nat) zero (\_ r => add n r) m

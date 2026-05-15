@@ -1,0 +1,8 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/23_err_type_mismatch.ott
+---
+ERROR: type mismatch
+  expected: Nat
+  inferred: Bool (at depth 0)

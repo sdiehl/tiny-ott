@@ -1,0 +1,16 @@
+-- Negation is the function-to-Empty pattern.
+-- Concrete disequalities are inhabitants of Not (Eq A x y).
+
+def Not : Type -> Type := \A => A -> Empty
+
+def not-zero-eq-one : Not (Eq Nat zero (suc zero))
+  := \p => p
+
+def not-true-eq-false : Not (Eq Bool true false)
+  := \p => p
+
+def ex-falso : (A : Type) -> Empty -> A
+  := \A e => empty-rec A e
+
+def from-disequal : (A : Type) -> Eq Nat zero (suc zero) -> A
+  := \A p => empty-rec A p

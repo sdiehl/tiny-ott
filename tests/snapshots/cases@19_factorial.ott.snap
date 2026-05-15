@@ -1,0 +1,32 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/19_factorial.ott
+---
+def add
+  : Nat -> Nat -> Nat
+  := \m => \n => natrec (\_ => Nat) n (\_ => \r => suc r) m
+def mul
+  : Nat -> Nat -> Nat
+  := \m => \n => natrec (\_ => Nat) zero (\_ => \r => add n r) m
+def fact
+  : Nat -> Nat
+  := \n => natrec (\_ => Nat) (suc zero) (\k => \r => mul (suc k) r) n
+eval
+  = suc zero
+  : Nat
+eval
+  = suc zero
+  : Nat
+eval
+  = suc (suc (suc (suc (suc (suc zero)))))
+  : Nat
+eval
+  = suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc (suc zero)))))))))))))))))))))))
+  : Nat
+def mul-2-3-eq-6
+  : Eq Nat (mul (suc (suc zero)) (suc (suc (suc zero)))) (suc (suc (suc (suc (suc (suc zero))))))
+  := tt
+def fact-3-eq-6
+  : Eq Nat (fact (suc (suc (suc zero)))) (suc (suc (suc (suc (suc (suc zero))))))
+  := tt

@@ -1,0 +1,6 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/24_err_unbound.ott
+---
+ERROR: unbound variable: some-undefined-name (at depth 0)

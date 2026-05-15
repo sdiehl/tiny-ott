@@ -1,0 +1,26 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/21_dep_sigma.ott
+---
+def Sig
+  : Type
+  := (A : Type) * A
+def nat-witness
+  : Sig
+  := (Nat, suc (suc zero))
+def bool-witness
+  : Sig
+  := (Bool, true)
+eval
+  = Nat
+  : Type
+eval
+  = suc (suc zero)
+  : Nat
+eval
+  = Bool
+  : Type
+eval
+  = true
+  : Bool
