@@ -12,7 +12,8 @@
     clippy::missing_const_for_fn,
     clippy::match_same_arms,
     clippy::len_without_is_empty,
-    clippy::use_self
+    clippy::use_self,
+    clippy::doc_markdown
 )]
 
 pub mod driver;
