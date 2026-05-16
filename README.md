@@ -27,6 +27,9 @@ add 2 3 : Nat
 > add 2 3
 suc (suc (suc (suc (suc zero))))
   : Nat
+> add-zero-id
+\_ => refl
+  : Nat -> Eq Nat _ _
 > :q
 ```
 

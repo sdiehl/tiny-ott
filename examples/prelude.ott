@@ -15,3 +15,5 @@ def add : Nat -> Nat -> Nat
 
 def mul : Nat -> Nat -> Nat
   := \m n => natrec (\_ => Nat) zero (\_ r => add n r) m
+
+def add-zero-id : Eq (Nat -> Nat) (add zero) (\n => n) := \_ => refl
