@@ -1,6 +1,6 @@
 use pretty::RcDoc;
 
-use crate::syntax::{Name, Tm};
+use crate::syntax::{Name, Tm, TAG_FALSE, TAG_TRUE, TAG_TT};
 
 const WIDTH: usize = 100;
 
@@ -37,12 +37,8 @@ fn doc(env: &mut Vec<Name>, tm: &Tm, lvl: u8) -> RcDoc<'static> {
         Tm::U => RcDoc::text("Type"),
         Tm::Nat => RcDoc::text("Nat"),
         Tm::Zero => RcDoc::text("zero"),
-        Tm::Bool => RcDoc::text("Bool"),
-        Tm::BTrue => RcDoc::text("true"),
-        Tm::BFalse => RcDoc::text("false"),
-        Tm::Unit => RcDoc::text("Unit"),
-        Tm::TT => RcDoc::text("tt"),
-        Tm::Empty => RcDoc::text("Empty"),
+        Tm::TagType(ls) => tag_type_doc(ls),
+        Tm::Tag(l) => tag_doc(l),
         Tm::Refl => RcDoc::text("refl"),
         Tm::Suc(t) => paren(lvl, APP, RcDoc::text("suc ").append(doc(env, t, ATOM))),
         Tm::App(f, x) => {
@@ -120,6 +116,34 @@ fn doc(env: &mut Vec<Name>, tm: &Tm, lvl: u8) -> RcDoc<'static> {
                 ],
             ),
         ),
+        Tm::Subst(a, p, x, y, pr, px) => paren(
+            lvl,
+            APP,
+            spaced(
+                ["subst", "_", "_", "_", "_", "_", "_"],
+                [
+                    doc(env, a, ATOM),
+                    doc(env, p, ATOM),
+                    doc(env, x, ATOM),
+                    doc(env, y, ATOM),
+                    doc(env, pr, ATOM),
+                    doc(env, px, ATOM),
+                ],
+            ),
+        ),
+        Tm::Coh(a, b, p, t) => paren(
+            lvl,
+            APP,
+            spaced(
+                ["coh", "_", "_", "_", "_"],
+                [
+                    doc(env, a, ATOM),
+                    doc(env, b, ATOM),
+                    doc(env, p, ATOM),
+                    doc(env, t, ATOM),
+                ],
+            ),
+        ),
         Tm::NatRec(p, z, s, n) => paren(
             lvl,
             APP,
@@ -133,27 +157,7 @@ fn doc(env: &mut Vec<Name>, tm: &Tm, lvl: u8) -> RcDoc<'static> {
                 ],
             ),
         ),
-        Tm::BoolRec(p, t, f, b) => paren(
-            lvl,
-            APP,
-            spaced(
-                ["boolrec", "_", "_", "_", "_"],
-                [
-                    doc(env, p, ATOM),
-                    doc(env, t, ATOM),
-                    doc(env, f, ATOM),
-                    doc(env, b, ATOM),
-                ],
-            ),
-        ),
-        Tm::EmptyRec(p, e) => paren(
-            lvl,
-            APP,
-            spaced(
-                ["empty-rec", "_", "_"],
-                [doc(env, p, ATOM), doc(env, e, ATOM)],
-            ),
-        ),
+        Tm::TagRec(p, cases, t) => tagrec_doc(env, p, cases, t, lvl),
         Tm::Let(n, ty, val, body) => {
             let head = RcDoc::text("let ")
                 .append(RcDoc::text(n.as_ref().to_string()))
@@ -167,7 +171,103 @@ fn doc(env: &mut Vec<Name>, tm: &Tm, lvl: u8) -> RcDoc<'static> {
             env.pop();
             paren(lvl, TOP, head.append(body_doc))
         }
+        Tm::Irrel => RcDoc::text("_"),
     }
+}
+
+fn tag_type_doc(ls: &[Name]) -> RcDoc<'static> {
+    if ls.is_empty() {
+        return RcDoc::text("Empty");
+    }
+    if ls.len() == 1 && ls[0].as_ref() == TAG_TT {
+        return RcDoc::text("Unit");
+    }
+    if ls.len() == 2 && ls[0].as_ref() == TAG_TRUE && ls[1].as_ref() == TAG_FALSE {
+        return RcDoc::text("Bool");
+    }
+    let mut d = RcDoc::text("{|");
+    for (i, l) in ls.iter().enumerate() {
+        if i > 0 {
+            d = d.append(RcDoc::text(","));
+        }
+        d = d
+            .append(RcDoc::text(" `"))
+            .append(RcDoc::text(l.as_ref().to_string()));
+    }
+    d.append(RcDoc::text(" |}"))
+}
+
+fn tag_doc(l: &Name) -> RcDoc<'static> {
+    let s = l.as_ref();
+    if s == TAG_TT || s == TAG_TRUE || s == TAG_FALSE {
+        RcDoc::text(s.to_string())
+    } else {
+        RcDoc::text("`").append(RcDoc::text(s.to_string()))
+    }
+}
+
+fn tagrec_doc(
+    env: &mut Vec<Name>,
+    p: &Tm,
+    cases: &[(Name, std::rc::Rc<Tm>)],
+    t: &Tm,
+    lvl: u8,
+) -> RcDoc<'static> {
+    if cases.is_empty() {
+        let ty_doc = if let Tm::Lam(n, body) = p {
+            env.push(n.clone());
+            let d = doc(env, body, ATOM);
+            env.pop();
+            d
+        } else {
+            doc(env, p, ATOM)
+        };
+        return paren(
+            lvl,
+            APP,
+            RcDoc::text("empty-rec ")
+                .append(ty_doc)
+                .append(RcDoc::text(" "))
+                .append(doc(env, t, ATOM)),
+        );
+    }
+    if cases.len() == 2 && cases[0].0.as_ref() == TAG_TRUE && cases[1].0.as_ref() == TAG_FALSE {
+        return paren(
+            lvl,
+            APP,
+            spaced(
+                ["boolrec", "_", "_", "_", "_"],
+                [
+                    doc(env, p, ATOM),
+                    doc(env, &cases[0].1, ATOM),
+                    doc(env, &cases[1].1, ATOM),
+                    doc(env, t, ATOM),
+                ],
+            ),
+        );
+    }
+    let mut body = RcDoc::text("{ ");
+    for (i, (l, b)) in cases.iter().enumerate() {
+        if i > 0 {
+            body = body.append(RcDoc::text("; "));
+        }
+        body = body
+            .append(RcDoc::text("`"))
+            .append(RcDoc::text(l.as_ref().to_string()))
+            .append(RcDoc::text(" => "))
+            .append(doc(env, b, TOP));
+    }
+    body = body.append(RcDoc::text(" }"));
+    paren(
+        lvl,
+        APP,
+        RcDoc::text("tagrec ")
+            .append(doc(env, p, ATOM))
+            .append(RcDoc::text(" "))
+            .append(body)
+            .append(RcDoc::text(" "))
+            .append(doc(env, t, ATOM)),
+    )
 }
 
 fn spaced<const N: usize, const M: usize>(

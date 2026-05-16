@@ -1,0 +1,18 @@
+-- A 3-element tag type, exercising the generality of TagType beyond Bool/Unit/Empty.
+
+def Color : Type := {| `red, `green, `blue |}
+
+def to-nat : Color -> Nat
+  := \c => tagrec (\_ => Nat) {
+       `red   => zero;
+       `green => suc zero;
+       `blue  => suc (suc zero)
+     } c
+
+eval to-nat `red
+eval to-nat `green
+eval to-nat `blue
+
+-- Concrete disequality between distinct tags: Eq Color `red `green reduces to Empty.
+def red-not-green : Eq Color `red `green -> Empty
+  := \p => p

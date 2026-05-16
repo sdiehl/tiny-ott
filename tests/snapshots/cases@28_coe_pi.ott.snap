@@ -1,0 +1,14 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/28_coe_pi.ott
+---
+def coe-id-pi
+  : (f : Nat -> Nat) -> Eq (Nat -> Nat) f f
+  := \f => \_ => refl
+def coe-id-sigma
+  : (p : Nat * Nat) -> Eq (Nat * Nat) p p
+  := \p => (refl, refl)
+eval
+  = (suc zero, zero)
+  : Nat * Nat

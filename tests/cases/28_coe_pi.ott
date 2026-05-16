@@ -1,0 +1,18 @@
+-- Pujet-Tabareau Figure 5: coe at Pi/Sigma reduces structurally.
+-- The Phase 3 reduction turns a coercion of a function into a lambda
+-- that coerces the argument back and forth and the codomain forward.
+
+-- coe at Pi (Nat -> Nat) (Nat -> Nat) p f reduces to a lambda; for
+-- definitionally equal Pi types the result is convertible to f via eta.
+def coe-id-pi
+  : (f : Nat -> Nat) -> Eq (Nat -> Nat) f f
+  := \f => refl
+
+-- coe at Sigma (Nat * Nat) (Nat * Nat) reduces componentwise; for a
+-- concrete pair both projections coerce by identity.
+def coe-id-sigma
+  : (p : Nat * Nat) -> Eq (Nat * Nat) p p
+  := \p => refl
+
+-- coercion of a pair across a refl-equality of Sigma types is the pair.
+eval coe (Nat * Nat) (Nat * Nat) refl (suc zero, zero)

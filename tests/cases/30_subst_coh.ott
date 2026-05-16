@@ -1,0 +1,23 @@
+-- Pujet-Tabareau Section 3: subst (transport) and coh (coherence) are
+-- derivable from coe. Here we expose them as surface-level primitives
+-- and verify their types and computational behavior.
+
+-- subst at refl is the identity on the fibre: subst A P x x refl px = px.
+def subst-refl
+  : (A : Type) -> (P : A -> Type) -> (x : A) -> P x -> P x
+  := \A P x px => subst A P x x refl px
+
+-- Specialised: transport along reflexive equality of Nats.
+def trans-zero : Nat
+  := subst Nat (\n => Nat) zero zero refl zero
+
+-- coh witnesses that coe respects the source value heterogeneously:
+-- coh A B p a : Eq B a (coe A B p a). At refl this is just refl.
+def coh-refl
+  : (A : Type) -> (a : A) -> Eq A a a
+  := \A a => coh A A refl a
+
+-- A more substantive use of coh: along the identity coe at Nat.
+def coh-nat
+  : (n : Nat) -> Eq Nat n n
+  := \n => coh Nat Nat refl n

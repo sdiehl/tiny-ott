@@ -10,7 +10,7 @@ use tiny_ott::diagnostics::render;
 use tiny_ott::driver::check_str_pretty;
 use tiny_ott::elab::{check, infer, Cxt};
 use tiny_ott::errors::{TinyOttError, TypeError};
-use tiny_ott::eval::{eval, quote};
+use tiny_ott::eval::{eval, quote, quote_typed};
 use tiny_ott::parse::Parser;
 use tiny_ott::pretty::pretty_tm;
 use tiny_ott::syntax::{Decl, ReplInput};
@@ -130,7 +130,7 @@ fn eval_input(cx: &mut Cxt, parser: &Parser, input: &str) {
         Ok(ReplInput::Term(raw)) => match infer(cx, &raw).map_err(TypeError::new) {
             Ok((tm, ty)) => {
                 let v = eval(&cx.env, &tm);
-                let nf = quote(cx.level(), &v);
+                let nf = quote_typed(cx.level(), &ty, &v);
                 let ty_tm = quote(cx.level(), &ty);
                 println!(
                     "{}\n  : {}",

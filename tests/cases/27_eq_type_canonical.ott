@@ -1,0 +1,25 @@
+-- Pujet-Tabareau Figure 4: Eq Type X Y reduces by recursion on the heads.
+-- Same canonical type former on both sides reduces to Unit (or to a Sigma
+-- of equalities for Pi/Sigma); distinct canonical type formers reduce to
+-- Empty.
+
+-- Eq Type Nat Nat ~> Unit, so refl checks.
+def eq-nat-nat : Eq Type Nat Nat := refl
+
+-- Eq Type Bool Bool ~> Unit.
+def eq-bool-bool : Eq Type Bool Bool := refl
+
+-- Eq Type Type Type ~> Unit.
+def eq-u-u : Eq Type Type Type := refl
+
+-- Distinct canonical type formers: Eq Type Nat Bool ~> Empty, so a proof
+-- inhabits the Empty -> A pattern.
+def not-nat-bool : Eq Type Nat Bool -> Empty
+  := \p => p
+
+def not-nat-unit : Eq Type Nat Unit -> Empty
+  := \p => p
+
+-- A 3-tag enum vs Bool: distinct TagType label sets are unequal at Type.
+def not-color-bool : Eq Type {| `red, `green, `blue |} Bool -> Empty
+  := \p => p

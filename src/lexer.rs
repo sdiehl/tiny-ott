@@ -50,6 +50,12 @@ pub enum Token {
     BoolRec,
     #[token("empty-rec")]
     EmptyRec,
+    #[token("tagrec")]
+    TagRec,
+    #[token("subst")]
+    Subst,
+    #[token("coh")]
+    Coh,
     #[token("fst")]
     Fst,
     #[token("snd")]
@@ -59,8 +65,18 @@ pub enum Token {
     LParen,
     #[token(")")]
     RParen,
+    #[token("{")]
+    LBrace,
+    #[token("}")]
+    RBrace,
+    #[token("{|")]
+    LBracePipe,
+    #[token("|}")]
+    RBracePipe,
     #[token(",")]
     Comma,
+    #[token(";")]
+    Semi,
     #[token(":")]
     Colon,
     #[token(":=")]
@@ -73,6 +89,8 @@ pub enum Token {
     Star,
     #[token("\\")]
     Backslash,
+    #[token("`")]
+    Backtick,
 
     #[regex(r"[a-zA-Z_][a-zA-Z0-9_'-]*", |lex| lex.slice().to_owned(), priority = 1)]
     Ident(String),
@@ -110,17 +128,26 @@ impl fmt::Display for Token {
             Self::NatRec => write!(f, "natrec"),
             Self::BoolRec => write!(f, "boolrec"),
             Self::EmptyRec => write!(f, "empty-rec"),
+            Self::TagRec => write!(f, "tagrec"),
+            Self::Subst => write!(f, "subst"),
+            Self::Coh => write!(f, "coh"),
             Self::Fst => write!(f, "fst"),
             Self::Snd => write!(f, "snd"),
             Self::LParen => write!(f, "("),
             Self::RParen => write!(f, ")"),
+            Self::LBrace => write!(f, "{{"),
+            Self::RBrace => write!(f, "}}"),
+            Self::LBracePipe => write!(f, "{{|"),
+            Self::RBracePipe => write!(f, "|}}"),
             Self::Comma => write!(f, ","),
+            Self::Semi => write!(f, ";"),
             Self::Colon => write!(f, ":"),
             Self::ColonEq => write!(f, ":="),
             Self::Arrow => write!(f, "->"),
             Self::FatArrow => write!(f, "=>"),
             Self::Star => write!(f, "*"),
             Self::Backslash => write!(f, "\\"),
+            Self::Backtick => write!(f, "`"),
             Self::Ident(s) => write!(f, "{s}"),
             Self::Number(n) => write!(f, "{n}"),
             Self::Whitespace => write!(f, "<whitespace>"),

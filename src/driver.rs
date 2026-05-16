@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use crate::elab::{check, infer, Cxt};
 use crate::errors::{TinyOttError, TinyOttResult, TypeError};
-use crate::eval::{eval, quote};
+use crate::eval::{eval, quote, quote_typed};
 use crate::parse::Parser;
 use crate::pretty::pretty_tm;
 use crate::syntax::Decl;
@@ -45,7 +45,7 @@ fn run_decl(cx: &mut Cxt, out: &mut String, d: Decl) -> TinyOttResult<()> {
         Decl::Eval(raw) => {
             let (tm, ty) = infer(cx, &raw).map_err(TypeError::new)?;
             let v = eval(&cx.env, &tm);
-            let nf_tm = quote(cx.level(), &v);
+            let nf_tm = quote_typed(cx.level(), &ty, &v);
             let ty_tm = quote(cx.level(), &ty);
             writeln!(
                 out,

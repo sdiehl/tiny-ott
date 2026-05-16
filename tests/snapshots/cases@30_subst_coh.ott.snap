@@ -1,0 +1,18 @@
+---
+source: tests/snapshots.rs
+assertion_line: 13
+expression: out
+input_file: tests/cases/30_subst_coh.ott
+---
+def subst-refl
+  : (A : Type) -> (P : A -> Type) -> (x : A) -> P x -> P x
+  := \A => \P => \x => \px => subst A P x x _ px
+def trans-zero
+  : Nat
+  := subst Nat (\n => Nat) zero zero tt zero
+def coh-refl
+  : (A : Type) -> (a : A) -> Eq A a a
+  := \A => \a => _
+def coh-nat
+  : (n : Nat) -> Eq Nat n n
+  := \n => _

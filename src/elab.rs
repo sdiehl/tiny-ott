@@ -1,6 +1,6 @@
 use crate::eval::{apply, closure_apply, conv, do_fst, eq_val, eval, quote};
 use crate::pretty::pretty_tm;
-use crate::syntax::{name, Index, Level, Name, Raw, Tm};
+use crate::syntax::{name, Index, Level, Name, Raw, Tm, TAG_TT};
 use crate::value::{Closure, Env, Val};
 use std::rc::Rc;
 
@@ -60,6 +60,14 @@ fn non_dep_closure(cx: &Cxt, body: &Val) -> Closure {
 }
 
 pub fn check(cx: &Cxt, raw: &Raw, expected: &Val) -> Result<Tm, String> {
+    if matches!(expected, Val::Eq(..)) {
+        let _ = check_dispatch(cx, raw, expected)?;
+        return Ok(Tm::Irrel);
+    }
+    check_dispatch(cx, raw, expected)
+}
+
+fn check_dispatch(cx: &Cxt, raw: &Raw, expected: &Val) -> Result<Tm, String> {
     match raw {
         Raw::Lam(ns, body) => check_lam(cx, ns, body, expected),
         Raw::Pair(a, b) => match expected {
@@ -76,6 +84,25 @@ pub fn check(cx: &Cxt, raw: &Raw, expected: &Val) -> Result<Tm, String> {
             )),
         },
         Raw::Refl => check_refl(cx, expected),
+        Raw::Tag(l) => match expected {
+            Val::TagType(ls) => {
+                if ls.iter().any(|x| x == l) {
+                    Ok(Tm::Tag(l.clone()))
+                } else {
+                    Err(err(
+                        cx,
+                        &format!("tag `{l} not a member of {}", show_val(cx, expected)),
+                    ))
+                }
+            }
+            other => Err(err(
+                cx,
+                &format!(
+                    "tag `{l} checked against non-TagType: {}",
+                    show_val(cx, other)
+                ),
+            )),
+        },
         Raw::Let(n, ty, val, body) => {
             let ty_tm = check(cx, ty, &Val::U)?;
             let ty_val = eval(&cx.env, &ty_tm);
@@ -134,8 +161,8 @@ fn check_lam(cx: &Cxt, ns: &[Name], body: &Raw, expected: &Val) -> Result<Tm, St
 
 fn check_refl(cx: &Cxt, expected: &Val) -> Result<Tm, String> {
     match expected {
-        Val::Unit => Ok(Tm::TT),
-        Val::Empty => Err(err(cx, "refl: Empty is not inhabited")),
+        Val::TagType(ls) if ls.len() == 1 && ls[0].as_ref() == TAG_TT => Ok(Tm::Tag(name(TAG_TT))),
+        Val::TagType(ls) if ls.is_empty() => Err(err(cx, "refl: Empty is not inhabited")),
         Val::Pi(n, dom, cod) => {
             let lvl = cx.level();
             let cx2 = cx.bind(n.clone(), (**dom).clone());
@@ -180,13 +207,12 @@ pub fn infer(cx: &Cxt, raw: &Raw) -> Result<(Tm, Val), String> {
         },
         Raw::U => Ok((Tm::U, Val::U)),
         Raw::Nat => Ok((Tm::Nat, Val::U)),
-        Raw::Bool => Ok((Tm::Bool, Val::U)),
-        Raw::Unit => Ok((Tm::Unit, Val::U)),
-        Raw::Empty => Ok((Tm::Empty, Val::U)),
         Raw::Zero => Ok((Tm::Zero, Val::Nat)),
-        Raw::BTrue => Ok((Tm::BTrue, Val::Bool)),
-        Raw::BFalse => Ok((Tm::BFalse, Val::Bool)),
-        Raw::TT => Ok((Tm::TT, Val::Unit)),
+        Raw::TagType(ls) => Ok((Tm::TagType(ls.clone()), Val::U)),
+        Raw::Tag(l) => Err(err(
+            cx,
+            &format!("cannot infer type of tag `{l}; use an annotation"),
+        )),
         Raw::NumLit(n) => {
             let mut t = Tm::Zero;
             for _ in 0..*n {
@@ -272,8 +298,8 @@ pub fn infer(cx: &Cxt, raw: &Raw) -> Result<(Tm, Val), String> {
         Raw::Eq(a, x, y) => {
             let a_tm = check(cx, a, &Val::U)?;
             let a_val = eval(&cx.env, &a_tm);
-            let x_tm = check(cx, x, &a_val)?;
-            let y_tm = check(cx, y, &a_val)?;
+            let x_tm = check_dispatch(cx, x, &a_val)?;
+            let y_tm = check_dispatch(cx, y, &a_val)?;
             Ok((Tm::Eq(Rc::new(a_tm), Rc::new(x_tm), Rc::new(y_tm)), Val::U))
         }
         Raw::Refl => Err(err(cx, "cannot infer type of refl; use an annotation")),
@@ -288,6 +314,54 @@ pub fn infer(cx: &Cxt, raw: &Raw) -> Result<(Tm, Val), String> {
             Ok((
                 Tm::Coe(Rc::new(a_tm), Rc::new(b_tm), Rc::new(p_tm), Rc::new(t_tm)),
                 b_val,
+            ))
+        }
+        Raw::Subst(a, p, x, y, pr, px) => {
+            let a_tm = check(cx, a, &Val::U)?;
+            let a_val = eval(&cx.env, &a_tm);
+            let p_ty = Val::Pi(
+                name("_"),
+                Rc::new(a_val.clone()),
+                Closure::Body(cx.env.clone(), Rc::new(Tm::U)),
+            );
+            let p_tm = check(cx, p, &p_ty)?;
+            let p_val = eval(&cx.env, &p_tm);
+            let x_tm = check(cx, x, &a_val)?;
+            let x_val = eval(&cx.env, &x_tm);
+            let y_tm = check(cx, y, &a_val)?;
+            let y_val = eval(&cx.env, &y_tm);
+            let eq_xy = eq_val(a_val, x_val.clone(), y_val.clone());
+            let pr_tm = check(cx, pr, &eq_xy)?;
+            let p_x = apply(p_val.clone(), x_val);
+            let p_y = apply(p_val, y_val);
+            let px_tm = check(cx, px, &p_x)?;
+            Ok((
+                Tm::Subst(
+                    Rc::new(a_tm),
+                    Rc::new(p_tm),
+                    Rc::new(x_tm),
+                    Rc::new(y_tm),
+                    Rc::new(pr_tm),
+                    Rc::new(px_tm),
+                ),
+                p_y,
+            ))
+        }
+        Raw::Coh(a, b, p, t) => {
+            let a_tm = check(cx, a, &Val::U)?;
+            let b_tm = check(cx, b, &Val::U)?;
+            let a_val = eval(&cx.env, &a_tm);
+            let b_val = eval(&cx.env, &b_tm);
+            let eq_u = eq_val(Val::U, a_val.clone(), b_val.clone());
+            let p_tm = check(cx, p, &eq_u)?;
+            let p_val = eval(&cx.env, &p_tm);
+            let t_tm = check(cx, t, &a_val)?;
+            let t_val = eval(&cx.env, &t_tm);
+            let coe_v = crate::eval::coe_val(a_val, b_val.clone(), p_val, t_val.clone());
+            let res_ty = Val::Eq(Rc::new(b_val), Rc::new(t_val), Rc::new(coe_v));
+            Ok((
+                Tm::Coh(Rc::new(a_tm), Rc::new(b_tm), Rc::new(p_tm), Rc::new(t_tm)),
+                res_ty,
             ))
         }
         Raw::NatRec(p, z, s, n) => {
@@ -310,31 +384,51 @@ pub fn infer(cx: &Cxt, raw: &Raw) -> Result<(Tm, Val), String> {
                 res_ty,
             ))
         }
-        Raw::BoolRec(p, t, f, b) => {
+        Raw::TagRec(p, cases, t) => {
+            let (t_tm, t_ty) = infer(cx, t)?;
+            let ls = match &t_ty {
+                Val::TagType(ls) => ls.clone(),
+                other => {
+                    return Err(err(
+                        cx,
+                        &format!(
+                            "tagrec scrutinee has non-TagType type: {}",
+                            show_val(cx, other)
+                        ),
+                    ));
+                }
+            };
+            let case_set: Vec<&Name> = cases.iter().map(|(l, _)| l).collect();
+            for l in &ls {
+                if !case_set.contains(&l) {
+                    return Err(err(cx, &format!("tagrec: missing case `{l}")));
+                }
+            }
+            for l in &case_set {
+                if !ls.contains(l) {
+                    return Err(err(cx, &format!("tagrec: extra case `{l}")));
+                }
+            }
             let p_ty = Val::Pi(
                 name("_"),
-                Rc::new(Val::Bool),
+                Rc::new(Val::TagType(ls.clone())),
                 Closure::Body(cx.env.clone(), Rc::new(Tm::U)),
             );
             let p_tm = check(cx, p, &p_ty)?;
             let p_val = eval(&cx.env, &p_tm);
-            let t_ty = apply(p_val.clone(), Val::BTrue);
-            let t_tm = check(cx, t, &t_ty)?;
-            let f_ty = apply(p_val.clone(), Val::BFalse);
-            let f_tm = check(cx, f, &f_ty)?;
-            let b_tm = check(cx, b, &Val::Bool)?;
-            let b_val = eval(&cx.env, &b_tm);
-            let res_ty = apply(p_val, b_val);
-            Ok((
-                Tm::BoolRec(Rc::new(p_tm), Rc::new(t_tm), Rc::new(f_tm), Rc::new(b_tm)),
-                res_ty,
-            ))
-        }
-        Raw::EmptyRec(p, e) => {
-            let p_tm = check(cx, p, &Val::U)?;
-            let p_val = eval(&cx.env, &p_tm);
-            let e_tm = check(cx, e, &Val::Empty)?;
-            Ok((Tm::EmptyRec(Rc::new(p_tm), Rc::new(e_tm)), p_val))
+            let mut cases_tm: Vec<(Name, Rc<Tm>)> = Vec::with_capacity(ls.len());
+            for l in &ls {
+                let body = cases
+                    .iter()
+                    .find_map(|(cl, b)| if cl == l { Some(b) } else { None })
+                    .unwrap();
+                let case_ty = apply(p_val.clone(), Val::Tag(l.clone()));
+                let body_tm = check(cx, body, &case_ty)?;
+                cases_tm.push((l.clone(), Rc::new(body_tm)));
+            }
+            let t_val = eval(&cx.env, &t_tm);
+            let res_ty = apply(p_val, t_val);
+            Ok((Tm::TagRec(Rc::new(p_tm), cases_tm, Rc::new(t_tm)), res_ty))
         }
         Raw::Let(n, ty, val, body) => {
             let ty_tm = check(cx, ty, &Val::U)?;

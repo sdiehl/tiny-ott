@@ -44,6 +44,60 @@ pub enum Closure {
     /// $\lambda \_.\, v$ -- a non-dependent closure ($\Pi/\Sigma$ codomain
     /// that ignores its bound variable).
     Const(Rc<Val>),
+    /// Codomain of $\mathsf{Eq}\, \mathcal{U}\, (\Pi (x:A).\, B)\, (\Pi
+    /// (x:A').\, B')$ once it has reduced to a $\Sigma$
+    /// (Pujet-Tabareau Figure 4 Eq-$\Pi$-at-$\mathcal{U}$). Applied to a
+    /// proof $e_0 : \mathsf{Eq}\, \mathcal{U}\, A'\, A$ it yields the inner
+    /// $\Pi$ value $\Pi (a' : A').\, \mathsf{Eq}\, \mathcal{U}\, (B\,
+    /// (\mathsf{coe}\, A'\, A\, e_0\, a'))\, (B'\, a')$.
+    EqUPiCod {
+        dom_l: Rc<Val>,
+        cod_l: Rc<Closure>,
+        dom_r: Rc<Val>,
+        cod_r: Rc<Closure>,
+    },
+    /// Body of the inner $\Pi$ produced by [`Closure::EqUPiCod`]. Applied
+    /// to $a' : A'$ it yields $\mathsf{Eq}\, \mathcal{U}\, (B\,
+    /// (\mathsf{coe}\, A'\, A\, e_0\, a'))\, (B'\, a')$.
+    EqUPiBody {
+        dom_l: Rc<Val>,
+        cod_l: Rc<Closure>,
+        dom_r: Rc<Val>,
+        cod_r: Rc<Closure>,
+        eq_dom: Rc<Val>,
+    },
+    /// Codomain of $\mathsf{Eq}\, \mathcal{U}\, (\Sigma (x:A).\, B)\,
+    /// (\Sigma (x:A').\, B')$ (Pujet-Tabareau Figure 4
+    /// Eq-$\Sigma$-at-$\mathcal{U}$). Applied to $e_0 : \mathsf{Eq}\,
+    /// \mathcal{U}\, A\, A'$ it yields $\Pi (a : A).\, \mathsf{Eq}\,
+    /// \mathcal{U}\, (B\, a)\, (B'\, (\mathsf{coe}\, A\, A'\, e_0\, a))$.
+    EqUSigmaCod {
+        dom_l: Rc<Val>,
+        cod_l: Rc<Closure>,
+        dom_r: Rc<Val>,
+        cod_r: Rc<Closure>,
+    },
+    /// Body of the inner $\Pi$ produced by [`Closure::EqUSigmaCod`].
+    EqUSigmaBody {
+        dom_l: Rc<Val>,
+        cod_l: Rc<Closure>,
+        dom_r: Rc<Val>,
+        cod_r: Rc<Closure>,
+        eq_dom: Rc<Val>,
+    },
+    /// Body of $\mathsf{coe}\, (\Pi (x:A).\, B)\, (\Pi (x:A').\, B')\, p\,
+    /// f$ (Pujet-Tabareau Figure 5 coe-$\Pi$). Applied to $a' : A'$ it
+    /// transports across the codomain: with $a = \mathsf{coe}\, A'\, A\,
+    /// (\pi_1\, p)\, a'$, returns $\mathsf{coe}\, (B\, a)\, (B'\, a')\,
+    /// (\pi_2\, p\, a')\, (f\, a)$.
+    CoePiBody {
+        dom_l: Rc<Val>,
+        cod_l: Rc<Closure>,
+        dom_r: Rc<Val>,
+        cod_r: Rc<Closure>,
+        proof: Rc<Val>,
+        fun: Rc<Val>,
+    },
 }
 
 impl fmt::Debug for Closure {
@@ -53,6 +107,11 @@ impl fmt::Debug for Closure {
             Self::EqPi(_, _, _) => write!(f, "EqPi"),
             Self::ReflPi(_) => write!(f, "ReflPi"),
             Self::Const(v) => write!(f, "Const({v:?})"),
+            Self::EqUPiCod { .. } => write!(f, "EqUPiCod"),
+            Self::EqUPiBody { .. } => write!(f, "EqUPiBody"),
+            Self::EqUSigmaCod { .. } => write!(f, "EqUSigmaCod"),
+            Self::EqUSigmaBody { .. } => write!(f, "EqUSigmaBody"),
+            Self::CoePiBody { .. } => write!(f, "CoePiBody"),
         }
     }
 }
@@ -81,18 +140,10 @@ pub enum Val {
     Zero,
     /// $\mathsf{S}\, n$.
     Suc(Rc<Val>),
-    /// $\mathbb{B}$.
-    Bool,
-    /// $\mathsf{tt}$.
-    BTrue,
-    /// $\mathsf{ff}$.
-    BFalse,
-    /// $\mathbb{1}$.
-    Unit,
-    /// $\star$.
-    TT,
-    /// $\mathbb{0}$.
-    Empty,
+    /// $\{| \ell_1, \ldots, \ell_n |\}$.
+    TagType(Vec<Name>),
+    /// `` `\ell ``.
+    Tag(Name),
     /// $\mathsf{Eq}\, A\, x\, y$ stuck because $A$ is a neutral type; otherwise
     /// the OTT reductions of Figure 4 would have already fired.
     Eq(Rc<Val>, Rc<Val>, Rc<Val>),
@@ -128,10 +179,8 @@ pub enum Elim {
     Snd,
     /// $\mathsf{rec}_\mathbb{N}\, P\, z\, s\, \square$.
     NatRec(Val, Val, Val),
-    /// $\mathsf{rec}_\mathbb{B}\, P\, t\, f\, \square$.
-    BoolRec(Val, Val, Val),
-    /// $\mathsf{rec}_\mathbb{0}\, P\, \square$.
-    EmptyRec(Val),
+    /// $\mathsf{rec}_{\{|\ldots|\}}\, P\, \{\ell_i \Rightarrow e_i\}\, \square$.
+    TagRec(Val, Vec<(Name, Val)>),
 }
 
 impl Val {

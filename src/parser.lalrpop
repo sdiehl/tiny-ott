@@ -1,4 +1,4 @@
-use crate::syntax::{Decl, Raw, ReplInput, name};
+use crate::syntax::{Decl, Raw, ReplInput, name, TAG_FALSE, TAG_TRUE, TAG_TT};
 use crate::lexer::{LexicalError, Token};
 
 grammar;
@@ -78,14 +78,59 @@ HeadOrPrefix: Raw = {
     "coe" <a:Atom> <b:Atom> <p:Atom> <t:Atom> => {
         Raw::Coe(Box::new(a), Box::new(b), Box::new(p), Box::new(t))
     },
+    "subst" <a:Atom> <p:Atom> <x:Atom> <y:Atom> <pr:Atom> <px:Atom> => {
+        Raw::Subst(
+            Box::new(a),
+            Box::new(p),
+            Box::new(x),
+            Box::new(y),
+            Box::new(pr),
+            Box::new(px),
+        )
+    },
+    "coh" <a:Atom> <b:Atom> <p:Atom> <x:Atom> => {
+        Raw::Coh(Box::new(a), Box::new(b), Box::new(p), Box::new(x))
+    },
     "natrec" <p:Atom> <z:Atom> <s:Atom> <n:Atom> => {
         Raw::NatRec(Box::new(p), Box::new(z), Box::new(s), Box::new(n))
     },
     "boolrec" <p:Atom> <t:Atom> <f:Atom> <b:Atom> => {
-        Raw::BoolRec(Box::new(p), Box::new(t), Box::new(f), Box::new(b))
+        Raw::TagRec(
+            Box::new(p),
+            vec![(name(TAG_TRUE), t), (name(TAG_FALSE), f)],
+            Box::new(b),
+        )
     },
     "empty-rec" <p:Atom> <e:Atom> => {
-        Raw::EmptyRec(Box::new(p), Box::new(e))
+        let motive = Raw::Lam(vec![name("_")], Box::new(p));
+        Raw::TagRec(Box::new(motive), vec![], Box::new(e))
+    },
+    "tagrec" <p:Atom> "{" <cs:TagCases> "}" <t:Atom> => {
+        Raw::TagRec(Box::new(p), cs, Box::new(t))
+    },
+};
+
+TagCases: Vec<(crate::syntax::Name, Raw)> = {
+    => vec![],
+    <c:TagCase> => vec![c],
+    <c:TagCase> ";" <rest:TagCases> => {
+        let mut v = vec![c];
+        v.extend(rest);
+        v
+    },
+};
+
+TagCase: (crate::syntax::Name, Raw) = {
+    "`" <l:"IDENT"> "=>" <body:Term> => (name(&l), body),
+};
+
+TagLabels: Vec<crate::syntax::Name> = {
+    => vec![],
+    "`" <l:"IDENT"> => vec![name(&l)],
+    "`" <l:"IDENT"> "," <rest:TagLabels> => {
+        let mut v = vec![name(&l)];
+        v.extend(rest);
+        v
     },
 };
 
@@ -94,14 +139,16 @@ Atom: Raw = {
     <n:"NUM"> => Raw::NumLit(n),
     "Type" => Raw::U,
     "Nat" => Raw::Nat,
-    "Bool" => Raw::Bool,
-    "Unit" => Raw::Unit,
-    "Empty" => Raw::Empty,
+    "Bool" => Raw::TagType(vec![name(TAG_TRUE), name(TAG_FALSE)]),
+    "Unit" => Raw::TagType(vec![name(TAG_TT)]),
+    "Empty" => Raw::TagType(vec![]),
     "zero" => Raw::Zero,
-    "true" => Raw::BTrue,
-    "false" => Raw::BFalse,
-    "tt" => Raw::TT,
+    "true" => Raw::Tag(name(TAG_TRUE)),
+    "false" => Raw::Tag(name(TAG_FALSE)),
+    "tt" => Raw::Tag(name(TAG_TT)),
     "refl" => Raw::Refl,
+    "{|" <ls:TagLabels> "|}" => Raw::TagType(ls),
+    "`" <l:"IDENT"> => Raw::Tag(name(&l)),
     "(" <t:Term> ")" => t,
     "(" <a:Term> "," <b:Term> ")" => Raw::Pair(Box::new(a), Box::new(b)),
 };
@@ -133,17 +180,26 @@ extern {
         "natrec" => Token::NatRec,
         "boolrec" => Token::BoolRec,
         "empty-rec" => Token::EmptyRec,
+        "tagrec" => Token::TagRec,
+        "subst" => Token::Subst,
+        "coh" => Token::Coh,
         "fst" => Token::Fst,
         "snd" => Token::Snd,
         "(" => Token::LParen,
         ")" => Token::RParen,
+        "{" => Token::LBrace,
+        "}" => Token::RBrace,
+        "{|" => Token::LBracePipe,
+        "|}" => Token::RBracePipe,
         "," => Token::Comma,
+        ";" => Token::Semi,
         ":" => Token::Colon,
         ":=" => Token::ColonEq,
         "->" => Token::Arrow,
         "=>" => Token::FatArrow,
         "*" => Token::Star,
         "\\" => Token::Backslash,
+        "`" => Token::Backtick,
         "IDENT" => Token::Ident(<String>),
         "NUM" => Token::Number(<u64>),
     }

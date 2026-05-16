@@ -1,0 +1,14 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/29_irrel_print.ott
+---
+def eq-id
+  : (n : Nat) -> (m : Nat) -> Eq Nat n m -> Eq Nat n m
+  := \n => \m => \p => _
+def eq-trivial
+  : (A : Type) -> (x : A) -> (y : A) -> Eq A x y -> Eq A x y
+  := \A => \x => \y => \p => _
+def eq-u-id
+  : (A : Type) -> (B : Type) -> Eq Type A B -> Eq Type A B
+  := \A => \B => \p => _

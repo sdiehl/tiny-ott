@@ -1,0 +1,23 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/26_tag_color.ott
+---
+def Color
+  : Type
+  := {| `red, `green, `blue |}
+def to-nat
+  : Color -> Nat
+  := \c => tagrec (\_ => Nat) { `red => zero; `green => suc zero; `blue => suc (suc zero) } c
+eval
+  = zero
+  : Nat
+eval
+  = suc zero
+  : Nat
+eval
+  = suc (suc zero)
+  : Nat
+def red-not-green
+  : Eq Color `red `green -> Empty
+  := \p => p

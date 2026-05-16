@@ -1,0 +1,23 @@
+---
+source: tests/snapshots.rs
+expression: out
+input_file: tests/cases/27_eq_type_canonical.ott
+---
+def eq-nat-nat
+  : Eq Type Nat Nat
+  := tt
+def eq-bool-bool
+  : Eq Type Bool Bool
+  := tt
+def eq-u-u
+  : Eq Type Type Type
+  := tt
+def not-nat-bool
+  : Eq Type Nat Bool -> Empty
+  := \p => p
+def not-nat-unit
+  : Eq Type Nat Unit -> Empty
+  := \p => p
+def not-color-bool
+  : Eq Type {| `red, `green, `blue |} Bool -> Empty
+  := \p => p

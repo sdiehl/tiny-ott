@@ -1,8 +1,7 @@
 ---
 source: tests/snapshots.rs
+assertion_line: 13
 expression: out
 input_file: tests/cases/23_err_type_mismatch.ott
 ---
-ERROR: type mismatch
-  expected: Nat
-  inferred: Bool (at depth 0)
+ERROR: tag `true checked against non-TagType: Nat (at depth 0)
