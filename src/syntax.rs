@@ -151,3 +151,10 @@ pub enum Decl {
     /// `check t : A` -- assert that $t$ checks at $A$.
     Check(Raw, Raw),
 }
+
+/// What the REPL grammar accepts on a single line.
+#[derive(Clone, Debug)]
+pub enum ReplInput {
+    Decl(Decl),
+    Term(Raw),
+}

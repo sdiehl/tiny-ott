@@ -1,3 +1,5 @@
+use std::io;
+
 use thiserror::Error;
 
 use crate::lexer::LexicalError;
@@ -13,7 +15,7 @@ pub enum TinyOttError {
     #[error("type error: {0}")]
     Type(#[from] TypeError),
     #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(#[from] io::Error),
 }
 
 #[derive(Debug, Error, Clone)]

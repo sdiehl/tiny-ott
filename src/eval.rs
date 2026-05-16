@@ -1,6 +1,7 @@
-use crate::syntax::{Level, Tm};
-use crate::value::{Closure, Elim, Env, Head, Spine, Val};
 use std::rc::Rc;
+
+use crate::syntax::{name, Level, Tm};
+use crate::value::{Closure, Elim, Env, Head, Spine, Val};
 
 pub fn eval(env: &Env, tm: &Tm) -> Val {
     match tm {
@@ -144,11 +145,7 @@ pub fn eq_val(a: Val, x: Val, y: Val) -> Val {
             let cod_at = closure_apply(&cod, xa.clone());
             let eq_a = eq_val((*dom).clone(), xa, ya);
             let eq_b = eq_val(cod_at, xb, yb);
-            Val::Sigma(
-                crate::syntax::name("_"),
-                Rc::new(eq_a),
-                Closure::Const(Rc::new(eq_b)),
-            )
+            Val::Sigma(name("_"), Rc::new(eq_a), Closure::Const(Rc::new(eq_b)))
         }
         Val::Nat => match (x.clone(), y.clone()) {
             (Val::Zero, Val::Zero) => Val::Unit,

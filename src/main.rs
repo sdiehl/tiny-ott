@@ -1,59 +1,58 @@
-use std::env;
 use std::fs;
+use std::mem;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use clap::{Parser as ClapParser, Subcommand};
 use rustyline::error::ReadlineError;
 use rustyline::{Config, DefaultEditor};
 use tiny_ott::diagnostics::render;
 use tiny_ott::driver::check_str_pretty;
-use tiny_ott::elab::{infer, Cxt};
+use tiny_ott::elab::{check, infer, Cxt};
 use tiny_ott::errors::{TinyOttError, TypeError};
 use tiny_ott::eval::{eval, quote};
 use tiny_ott::parse::Parser;
 use tiny_ott::pretty::pretty_tm;
+use tiny_ott::syntax::{Decl, ReplInput};
+use tiny_ott::value::Val;
 
-const HELP: &str = "\
-tiny-ott: a small observational type theory checker
-
-USAGE:
-    tiny-ott [FILE]        check a .ott file and print results
-    tiny-ott repl          start an interactive REPL
-    tiny-ott --help        show this help
-
-REPL commands:
-    :t <expr>              infer the type of <expr>
-    :l <file>              load definitions from <file>
-    :q                     quit
-    :?                     this help
-    <decl>                 def/eval/check declaration
-    <expr>                 evaluate to normal form
+const REPL_HELP: &str = "\
+:t <expr>    infer the type of <expr>
+:l <file>    load definitions from <file>
+:?           this help
+:q           quit
+<decl>       def/eval/check declaration
+<expr>       evaluate to normal form
 ";
 
+#[derive(ClapParser)]
+#[command(name = "tiny-ott", about = "a small observational type theory checker")]
+struct Cli {
+    #[command(subcommand)]
+    cmd: Option<Cmd>,
+}
+
+#[derive(Subcommand)]
+enum Cmd {
+    /// Start an interactive REPL
+    Repl,
+    /// Type-check a .ott file
+    Check {
+        /// Path to a .ott source file
+        file: PathBuf,
+    },
+}
+
 fn main() -> ExitCode {
-    let args: Vec<String> = env::args().skip(1).collect();
-    match args.as_slice() {
-        [] => repl(),
-        [a] if a == "--help" || a == "-h" => {
-            println!("{HELP}");
-            ExitCode::SUCCESS
-        }
-        [a] if a == "repl" => repl(),
-        [a] if a == "check" => {
-            eprintln!("missing FILE");
-            ExitCode::FAILURE
-        }
-        [cmd, file] if cmd == "check" => check_file(file),
-        [file] => check_file(file),
-        _ => {
-            eprintln!("{HELP}");
-            ExitCode::FAILURE
-        }
+    match Cli::parse().cmd {
+        None | Some(Cmd::Repl) => repl(),
+        Some(Cmd::Check { file }) => check_file(&file),
     }
 }
 
-fn check_file(path: &str) -> ExitCode {
+fn check_file(path: &Path) -> ExitCode {
     let Ok(src) = fs::read_to_string(path) else {
-        eprintln!("cannot read {path}");
+        eprintln!("cannot read {}", path.display());
         return ExitCode::FAILURE;
     };
     match check_str_pretty(&src) {
@@ -62,7 +61,7 @@ fn check_file(path: &str) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(e) => {
-            eprint!("{}", render(&e, path, &src));
+            eprint!("{}", render(&e, &path.display().to_string(), &src));
             ExitCode::FAILURE
         }
     }
@@ -107,7 +106,7 @@ fn handle_cmd(cx: &mut Cxt, parser: &Parser, rest: &str) -> bool {
     match cmd {
         "q" | "quit" => false,
         "?" | "h" | "help" => {
-            println!("{HELP}");
+            print!("{REPL_HELP}");
             true
         }
         "t" | "type" => {
@@ -126,46 +125,43 @@ fn handle_cmd(cx: &mut Cxt, parser: &Parser, rest: &str) -> bool {
 }
 
 fn eval_input(cx: &mut Cxt, parser: &Parser, input: &str) {
-    let trimmed = input.trim_start();
-    if trimmed.starts_with("def ") || trimmed.starts_with("eval ") || trimmed.starts_with("check ")
-    {
-        let mut src = input.to_string();
-        if !src.ends_with('\n') {
-            src.push('\n');
-        }
-        match check_str_pretty(&src) {
-            Ok(out) => {
-                print!("{out}");
+    match parser.parse_repl(input) {
+        Ok(ReplInput::Decl(d)) => run_decl(cx, &d, input),
+        Ok(ReplInput::Term(raw)) => match infer(cx, &raw).map_err(TypeError::new) {
+            Ok((tm, ty)) => {
+                let v = eval(&cx.env, &tm);
+                let nf = quote(cx.level(), &v);
+                let ty_tm = quote(cx.level(), &ty);
+                println!(
+                    "{}\n  : {}",
+                    pretty_tm(&cx.names, &nf),
+                    pretty_tm(&cx.names, &ty_tm)
+                );
+            }
+            Err(e) => {
+                let err: TinyOttError = e.into();
+                eprint!("{}", render(&err, "<repl>", input));
+            }
+        },
+        Err(e) => eprint!("{}", render(&e, "<repl>", input)),
+    }
+}
+
+fn run_decl(cx: &mut Cxt, decl: &Decl, input: &str) {
+    let mut src = input.to_string();
+    if !src.ends_with('\n') {
+        src.push('\n');
+    }
+    match check_str_pretty(&src) {
+        Ok(out) => {
+            print!("{out}");
+            if matches!(decl, Decl::Def(..)) {
                 if let Ok(mut new_cx) = rebuild_cxt(&src) {
-                    std::mem::swap(cx, &mut new_cx);
+                    mem::swap(cx, &mut new_cx);
                 }
             }
-            Err(e) => eprint!("{}", render(&e, "<repl>", &src)),
         }
-        return;
-    }
-    let raw = match parser.parse_term(input) {
-        Ok(r) => r,
-        Err(e) => {
-            eprint!("{}", render(&e, "<repl>", input));
-            return;
-        }
-    };
-    match infer(cx, &raw).map_err(TypeError::new) {
-        Ok((tm, ty)) => {
-            let v = eval(&cx.env, &tm);
-            let nf = quote(cx.level(), &v);
-            let ty_tm = quote(cx.level(), &ty);
-            println!(
-                "{}\n  : {}",
-                pretty_tm(&cx.names, &nf),
-                pretty_tm(&cx.names, &ty_tm)
-            );
-        }
-        Err(e) => {
-            let err: TinyOttError = e.into();
-            eprint!("{}", render(&err, "<repl>", input));
-        }
+        Err(e) => eprint!("{}", render(&e, "<repl>", &src)),
     }
 }
 
@@ -206,7 +202,7 @@ fn load(cx: &mut Cxt, path: &str) {
         Ok(out) => {
             print!("{out}");
             if let Ok(mut new_cx) = rebuild_cxt(&src) {
-                std::mem::swap(cx, &mut new_cx);
+                mem::swap(cx, &mut new_cx);
             }
         }
         Err(e) => eprint!("{}", render(&e, path, &src)),
@@ -214,9 +210,6 @@ fn load(cx: &mut Cxt, path: &str) {
 }
 
 fn rebuild_cxt(src: &str) -> Result<Cxt, TinyOttError> {
-    use tiny_ott::elab::check;
-    use tiny_ott::syntax::Decl;
-    use tiny_ott::value::Val;
     let parser = Parser::new();
     let decls = parser.parse_module(src)?;
     let mut cx = Cxt::default();

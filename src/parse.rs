@@ -1,6 +1,10 @@
+use std::fmt;
+
+use lalrpop_util::ParseError as LalrParseError;
+
 use crate::errors::{ParseError, TinyOttResult};
 use crate::lexer::{Lexer, LexicalError, Token};
-use crate::syntax::{Decl, Raw};
+use crate::syntax::{Decl, Raw, ReplInput};
 
 #[allow(
     clippy::all,
@@ -16,12 +20,13 @@ mod parser_impl {
 use parser_impl::parser;
 
 pub struct Parser {
-    module_parser: parser::ModuleParser,
-    term_parser: parser::TermParser,
+    module: parser::ModuleParser,
+    term: parser::TermParser,
+    repl: parser::ReplParser,
 }
 
-impl std::fmt::Debug for Parser {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Debug for Parser {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Parser").finish()
     }
 }
@@ -35,14 +40,15 @@ impl Default for Parser {
 impl Parser {
     pub fn new() -> Self {
         Self {
-            module_parser: parser::ModuleParser::new(),
-            term_parser: parser::TermParser::new(),
+            module: parser::ModuleParser::new(),
+            term: parser::TermParser::new(),
+            repl: parser::ReplParser::new(),
         }
     }
 
     pub fn parse_module(&self, input: &str) -> TinyOttResult<Vec<Decl>> {
         let tokens = Lexer::new(input);
-        match self.module_parser.parse(tokens) {
+        match self.module.parse(tokens) {
             Ok(m) => Ok(m),
             Err(e) => Err(convert(e, input).into()),
         }
@@ -50,22 +56,29 @@ impl Parser {
 
     pub fn parse_term(&self, input: &str) -> TinyOttResult<Raw> {
         let tokens = Lexer::new(input);
-        match self.term_parser.parse(tokens) {
+        match self.term.parse(tokens) {
             Ok(t) => Ok(t),
+            Err(e) => Err(convert(e, input).into()),
+        }
+    }
+
+    pub fn parse_repl(&self, input: &str) -> TinyOttResult<ReplInput> {
+        let tokens = Lexer::new(input);
+        match self.repl.parse(tokens) {
+            Ok(r) => Ok(r),
             Err(e) => Err(convert(e, input).into()),
         }
     }
 }
 
-fn convert(err: lalrpop_util::ParseError<usize, Token, LexicalError>, input: &str) -> ParseError {
-    use lalrpop_util::ParseError as P;
+fn convert(err: LalrParseError<usize, Token, LexicalError>, input: &str) -> ParseError {
     match err {
-        P::InvalidToken { location } => ParseError::InvalidToken { offset: location },
-        P::UnrecognizedEof { location, expected } => ParseError::UnexpectedEof {
+        LalrParseError::InvalidToken { location } => ParseError::InvalidToken { offset: location },
+        LalrParseError::UnrecognizedEof { location, expected } => ParseError::UnexpectedEof {
             expected,
             offset: location.min(input.len()),
         },
-        P::UnrecognizedToken {
+        LalrParseError::UnrecognizedToken {
             token: (start, tok, end),
             expected,
         } => ParseError::UnexpectedToken {
@@ -73,12 +86,12 @@ fn convert(err: lalrpop_util::ParseError<usize, Token, LexicalError>, input: &st
             expected,
             span: (start, end),
         },
-        P::ExtraToken {
+        LalrParseError::ExtraToken {
             token: (start, tok, end),
         } => ParseError::ExtraToken {
             token: tok.to_string(),
             span: (start, end),
         },
-        P::User { error } => ParseError::Lexical(error),
+        LalrParseError::User { error } => ParseError::Lexical(error),
     }
 }

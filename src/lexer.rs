@@ -1,6 +1,7 @@
 use std::fmt;
 
-use logos::Logos;
+use logos::{skip, Lexer as LogosLexer, Logos};
+use thiserror::Error;
 
 #[derive(Logos, Debug, Clone, PartialEq, Eq)]
 pub enum Token {
@@ -79,8 +80,8 @@ pub enum Token {
     #[regex(r"[0-9]+", |lex| lex.slice().parse::<u64>().ok())]
     Number(u64),
 
-    #[regex(r"[ \t\n\r\f]+", logos::skip)]
-    #[regex(r"--[^\n\r]*", logos::skip, allow_greedy = true)]
+    #[regex(r"[ \t\n\r\f]+", skip)]
+    #[regex(r"--[^\n\r]*", skip, allow_greedy = true)]
     Whitespace,
 }
 
@@ -127,7 +128,7 @@ impl fmt::Display for Token {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
 pub enum LexicalError {
     #[error("invalid token at byte offset {0}")]
     InvalidToken(usize),
@@ -143,7 +144,7 @@ impl LexicalError {
 
 #[derive(Debug)]
 pub struct Lexer<'input> {
-    inner: logos::Lexer<'input, Token>,
+    inner: LogosLexer<'input, Token>,
 }
 
 impl<'input> Lexer<'input> {

@@ -1,3 +1,5 @@
+use std::process;
+
 use tiny_ott::check_str;
 
 const PRELUDE: &str = include_str!("prelude.ott");
@@ -9,7 +11,7 @@ fn main() {
         Ok(out) => print!("{out}"),
         Err(e) => {
             eprintln!("error: {e}");
-            std::process::exit(1);
+            process::exit(1);
         }
     }
 }

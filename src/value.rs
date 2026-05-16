@@ -1,5 +1,7 @@
-use crate::syntax::{Level, Name, Tm};
+use std::fmt;
 use std::rc::Rc;
+
+use crate::syntax::{Level, Name, Tm};
 
 #[derive(Clone, Debug, Default)]
 pub struct Env(pub Vec<Val>);
@@ -44,8 +46,8 @@ pub enum Closure {
     Const(Rc<Val>),
 }
 
-impl std::fmt::Debug for Closure {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Debug for Closure {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Body(_, t) => write!(f, "Body({t:?})"),
             Self::EqPi(_, _, _) => write!(f, "EqPi"),

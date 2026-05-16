@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use ariadne::{Color, Label, Report, ReportKind, Source};
+use ariadne::{Color, Label, Report, ReportBuilder, ReportKind, Source};
 
 use crate::errors::{ParseError, TinyOttError, TypeError};
 use crate::lexer::LexicalError;
@@ -74,7 +74,7 @@ fn parse_span(e: &ParseError, source: &str) -> (Range<usize>, String) {
     }
 }
 
-fn build(name: &str, span: Range<usize>) -> ariadne::ReportBuilder<'_, (&str, Range<usize>)> {
+fn build(name: &str, span: Range<usize>) -> ReportBuilder<'_, (&str, Range<usize>)> {
     Report::build(ReportKind::Error, (name, span))
 }
 

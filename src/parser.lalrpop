@@ -1,10 +1,15 @@
-use crate::syntax::{Decl, Raw, name};
+use crate::syntax::{Decl, Raw, ReplInput, name};
 use crate::lexer::{LexicalError, Token};
 
 grammar;
 
 pub Module: Vec<Decl> = {
     <ds:Decl*> => ds,
+};
+
+pub Repl: ReplInput = {
+    <d:Decl> => ReplInput::Decl(d),
+    <t:Term> => ReplInput::Term(t),
 };
 
 Decl: Decl = {
