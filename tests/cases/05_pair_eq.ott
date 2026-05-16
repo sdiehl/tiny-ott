@@ -3,13 +3,13 @@
 -- project component equalities out, both definitionally.
 
 def pair-eq :
-    (A : Type) -> (B : Type) -> (a1 a2 : A) -> (b1 b2 : B) ->
+    (A : Type) -> (B : Type) -> (a1 : A) -> (a2 : A) -> (b1 : B) -> (b2 : B) ->
     Eq A a1 a2 * Eq B b1 b2 ->
     Eq (A * B) (a1, b1) (a2, b2)
   := \A B a1 a2 b1 b2 p => p
 
 def pair-eq-inv :
-    (A : Type) -> (B : Type) -> (a1 a2 : A) -> (b1 b2 : B) ->
+    (A : Type) -> (B : Type) -> (a1 : A) -> (a2 : A) -> (b1 : B) -> (b2 : B) ->
     Eq (A * B) (a1, b1) (a2, b2) ->
     Eq A a1 a2 * Eq B b1 b2
   := \A B a1 a2 b1 b2 p => p

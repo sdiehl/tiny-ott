@@ -1,13 +1,17 @@
 # tiny-ott
 
-my first basic attempt at an efficient Rust implementation of Observational Type Theory, based on trying to understand Pujet and Tabareau, [Observational Equality: Now for Good](https://hal.inria.fr/hal-03367052) (POPL 2022).
+My first basic attempt at an efficient Rust implementation of Observational Type Theory, based on trying to understand Pujet and Tabareau, [Observational Equality: Now for Good](https://dl.acm.org/doi/pdf/10.1145/3498693).
 
 ## Build
 
 ```bash
 cargo build
-cargo test
-cargo run --example demo
+```
+
+## REPL
+
+```bash
+cargo run -- repl
 ```
 
 ## License

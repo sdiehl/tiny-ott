@@ -1,4 +1,4 @@
-def compose : (A B C : Type) -> (B -> C) -> (A -> B) -> A -> C
+def compose : (A : Type) -> (B : Type) -> (C : Type) -> (B -> C) -> (A -> B) -> A -> C
   := \A B C f g x => f (g x)
 
 def succ : Nat -> Nat := \n => suc n

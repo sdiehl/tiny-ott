@@ -2,9 +2,9 @@
 -- In OTT, Eq A x y is a (sub-)singleton when canonical, so this is definitional.
 
 def eq-irrelevance :
-    (A : Type) -> (x y : A) -> (p q : Eq A x y) -> Eq (Eq A x y) p q
+    (A : Type) -> (x : A) -> (y : A) -> (p : Eq A x y) -> (q : Eq A x y) -> Eq (Eq A x y) p q
   := \A x y p q => tt
 
 def eq-irrelevance-nat :
-    (x y : Nat) -> (p q : Eq Nat x y) -> Eq (Eq Nat x y) p q
+    (x : Nat) -> (y : Nat) -> (p : Eq Nat x y) -> (q : Eq Nat x y) -> Eq (Eq Nat x y) p q
   := \x y p q => tt

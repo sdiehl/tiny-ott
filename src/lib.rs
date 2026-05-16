@@ -1,6 +1,4 @@
 //! Tiny observational type theory checker.
-//!
-//! See `README.md` for an overview and the worked examples under `examples/`.
 
 #![allow(
     clippy::missing_errors_doc,
@@ -16,12 +14,16 @@
     clippy::doc_markdown
 )]
 
+pub mod diagnostics;
 pub mod driver;
 pub mod elab;
+pub mod errors;
 pub mod eval;
-pub mod parser;
+pub mod lexer;
+pub mod parse;
 pub mod pretty;
 pub mod syntax;
 pub mod value;
 
 pub use driver::check_str;
+pub use errors::{TinyOttError, TinyOttResult};

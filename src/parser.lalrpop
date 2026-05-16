@@ -1,0 +1,145 @@
+use crate::syntax::{Decl, Raw, name};
+use crate::lexer::{LexicalError, Token};
+
+grammar;
+
+pub Module: Vec<Decl> = {
+    <ds:Decl*> => ds,
+};
+
+Decl: Decl = {
+    "def" <n:"IDENT"> ":" <ty:Term> ":=" <body:Term> => {
+        Decl::Def(name(&n), ty, body)
+    },
+    "eval" <t:Term> => Decl::Eval(t),
+    "check" <t:Term> ":" <ty:Term> => Decl::Check(t, ty),
+};
+
+pub Term: Raw = {
+    Lambda,
+};
+
+Lambda: Raw = {
+    LetExpr,
+    "\\" <ns:LamBinders> "=>" <body:Term> => Raw::Lam(ns, Box::new(body)),
+    "fun" <ns:LamBinders> "=>" <body:Term> => Raw::Lam(ns, Box::new(body)),
+};
+
+LamBinders: Vec<crate::syntax::Name> = {
+    <s:"IDENT"> => vec![name(&s)],
+    <s:"IDENT"> <rest:LamBinders> => {
+        let mut v = vec![name(&s)];
+        v.extend(rest);
+        v
+    },
+};
+
+LetExpr: Raw = {
+    Arrow,
+    "let" <n:"IDENT"> ":" <ty:Term> ":=" <val:Arrow> "in" <body:Term> => {
+        Raw::Let(name(&n), Box::new(ty), Box::new(val), Box::new(body))
+    },
+};
+
+Arrow: Raw = {
+    Prod,
+    <l:Prod> "->" <r:Arrow> => Raw::Arrow(Box::new(l), Box::new(r)),
+    "(" <n:"IDENT"> ":" <ty:Term> ")" "->" <body:Arrow> => {
+        Raw::Pi(vec![name(&n)], Box::new(ty), Box::new(body))
+    },
+    "(" <n:"IDENT"> ":" <ty:Term> ")" "*" <body:Arrow> => {
+        Raw::Sigma(vec![name(&n)], Box::new(ty), Box::new(body))
+    },
+};
+
+Prod: Raw = {
+    App,
+    <l:App> "*" <r:Prod> => Raw::Prod(Box::new(l), Box::new(r)),
+};
+
+App: Raw = {
+    HeadOrPrefix,
+    <f:App> <x:Atom> => Raw::App(Box::new(f), Box::new(x)),
+};
+
+HeadOrPrefix: Raw = {
+    Atom,
+    "suc" <t:Atom> => Raw::Suc(Box::new(t)),
+    "fst" <t:Atom> => Raw::Fst(Box::new(t)),
+    "snd" <t:Atom> => Raw::Snd(Box::new(t)),
+    "Eq" <a:Atom> <x:Atom> <y:Atom> => {
+        Raw::Eq(Box::new(a), Box::new(x), Box::new(y))
+    },
+    "coe" <a:Atom> <b:Atom> <p:Atom> <t:Atom> => {
+        Raw::Coe(Box::new(a), Box::new(b), Box::new(p), Box::new(t))
+    },
+    "natrec" <p:Atom> <z:Atom> <s:Atom> <n:Atom> => {
+        Raw::NatRec(Box::new(p), Box::new(z), Box::new(s), Box::new(n))
+    },
+    "boolrec" <p:Atom> <t:Atom> <f:Atom> <b:Atom> => {
+        Raw::BoolRec(Box::new(p), Box::new(t), Box::new(f), Box::new(b))
+    },
+    "empty-rec" <p:Atom> <e:Atom> => {
+        Raw::EmptyRec(Box::new(p), Box::new(e))
+    },
+};
+
+Atom: Raw = {
+    <s:"IDENT"> => Raw::Var(name(&s)),
+    <n:"NUM"> => Raw::NumLit(n),
+    "Type" => Raw::U,
+    "Nat" => Raw::Nat,
+    "Bool" => Raw::Bool,
+    "Unit" => Raw::Unit,
+    "Empty" => Raw::Empty,
+    "zero" => Raw::Zero,
+    "true" => Raw::BTrue,
+    "false" => Raw::BFalse,
+    "tt" => Raw::TT,
+    "refl" => Raw::Refl,
+    "(" <t:Term> ")" => t,
+    "(" <a:Term> "," <b:Term> ")" => Raw::Pair(Box::new(a), Box::new(b)),
+};
+
+extern {
+    type Location = usize;
+    type Error = LexicalError;
+
+    enum Token {
+        "def" => Token::Def,
+        "eval" => Token::Eval,
+        "check" => Token::Check,
+        "let" => Token::Let,
+        "in" => Token::In,
+        "fun" => Token::Fun,
+        "Type" => Token::Type,
+        "Nat" => Token::Nat,
+        "Bool" => Token::Bool,
+        "Unit" => Token::Unit,
+        "Empty" => Token::Empty,
+        "zero" => Token::Zero,
+        "suc" => Token::Suc,
+        "true" => Token::True,
+        "false" => Token::False,
+        "tt" => Token::TT,
+        "refl" => Token::Refl,
+        "coe" => Token::Coe,
+        "Eq" => Token::Eq,
+        "natrec" => Token::NatRec,
+        "boolrec" => Token::BoolRec,
+        "empty-rec" => Token::EmptyRec,
+        "fst" => Token::Fst,
+        "snd" => Token::Snd,
+        "(" => Token::LParen,
+        ")" => Token::RParen,
+        "," => Token::Comma,
+        ":" => Token::Colon,
+        ":=" => Token::ColonEq,
+        "->" => Token::Arrow,
+        "=>" => Token::FatArrow,
+        "*" => Token::Star,
+        "\\" => Token::Backslash,
+        "IDENT" => Token::Ident(<String>),
+        "NUM" => Token::Number(<u64>),
+    }
+}

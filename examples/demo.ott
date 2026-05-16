@@ -1,5 +1,5 @@
 def funext :
-    (A : Type) -> (B : A -> Type) -> (f g : (x : A) -> B x) ->
+    (A : Type) -> (B : A -> Type) -> (f : (x : A) -> B x) -> (g : (x : A) -> B x) ->
     ((x : A) -> Eq (B x) (f x) (g x)) -> Eq ((x : A) -> B x) f g
   := \A B f g h => h
 

@@ -1,6 +1,6 @@
 def id : (A : Type) -> A -> A := \A x => x
 
-def compose : (A B C : Type) -> (B -> C) -> (A -> B) -> A -> C
+def compose : (A : Type) -> (B : Type) -> (C : Type) -> (B -> C) -> (A -> B) -> A -> C
   := \A B C f g x => f (g x)
 
 def Not : Type -> Type := \A => A -> Empty

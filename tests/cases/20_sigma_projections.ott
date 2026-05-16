@@ -3,10 +3,10 @@
 
 def Pair : Type -> Type -> Type := \A B => A * B
 
-def swap : (A B : Type) -> A * B -> B * A
+def swap : (A : Type) -> (B : Type) -> A * B -> B * A
   := \A B p => (snd p, fst p)
 
-def swap-eq : (A B : Type) -> (a : A) -> (b : B) ->
+def swap-eq : (A : Type) -> (B : Type) -> (a : A) -> (b : B) ->
               Eq (B * A) (swap A B (a, b)) (b, a)
   := \A B a b => refl
 
