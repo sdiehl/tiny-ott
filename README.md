@@ -6,9 +6,6 @@ OTT is cool because equality computes by recursion on the type instead of being 
 
 ```bash
 cargo build
-```
-
-```bash
 cargo run -- repl
 ```
 
@@ -40,6 +37,8 @@ _
   : Eq Nat zero zero
 > :q
 ```
+
+the repl commands
 
 | command     | effect                                 |
 | ----------- | -------------------------------------- |
